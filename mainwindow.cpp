@@ -130,7 +130,7 @@ void MainWindow::onStart()
     m_sampleIndex = 0;
     m_sampleCount = 0;
 
-    if (m_adcReader->startLoop(50, adcList)) {
+    if (m_adcReader->startLoop(20, adcList)) {
         ui->actionStart->setEnabled(false);
         ui->actionStop->setEnabled(true);
 
@@ -138,7 +138,7 @@ void MainWindow::onStart()
             m_check[i]->setEnabled(false);
         }
 
-        m_timer = startTimer(100);
+        m_timer = startTimer(50);
     }
 }
 
