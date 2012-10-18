@@ -3,6 +3,9 @@
  *
  */
 
+#include <QHBoxLayout>
+#include <QVBoxLayout>
+
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
@@ -11,6 +14,10 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
+    layoutControls();
+
+    m_timer = 0;
 
     connect(ui->actionExit, SIGNAL(triggered()), this, SLOT(close()));
     connect(ui->actionStart, SIGNAL(triggered()), this, SLOT(onStart()));
@@ -21,7 +28,6 @@ MainWindow::MainWindow(QWidget *parent) :
     if (m_adcReader) {
         connect(m_adcReader, SIGNAL(dataEvent(QList<int>)), this, SLOT(adcDataEvent(QList<int>)), Qt::DirectConnection);
         connect(m_adcReader, SIGNAL(stopEvent()), this, SLOT(adcStopEvent()), Qt::DirectConnection);
-        m_timer = startTimer(50);
     }
     else {
         ui->actionStart->setEnabled(false);
@@ -30,10 +36,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->actionStop->setEnabled(false);
 
 #ifdef Q_WS_QWS
-    // remove title bar
     setWindowFlags(Qt::CustomizeWindowHint);
 #endif
-
 }
 
 MainWindow::~MainWindow()
@@ -58,35 +62,19 @@ void MainWindow::timerEvent(QTimerEvent *)
 
     m_dataMutex.lock();
 
-    if (m_sampleCount < NUM_SAMPLES)
-        divisor = m_sampleCount;
+    if (m_sampleCount > 0) {
+        if (m_sampleCount < NUM_SAMPLES)
+            divisor = m_sampleCount;
 
-    if (ui->check_2->isChecked())
-        ui->check_2->setText(QString::number(m_sum[0] / divisor));
-
-    if (ui->check_3->isChecked())
-        ui->check_2->setText(QString::number(m_sum[1] / divisor));
-
-    if (ui->check_4->isChecked())
-        ui->check_2->setText(QString::number(m_sum[2] / divisor));
-
-    if (ui->check_5->isChecked())
-        ui->check_2->setText(QString::number(m_sum[3] / divisor));
-
-    if (ui->check_6->isChecked())
-        ui->check_2->setText(QString::number(m_sum[4] / divisor));
-
-    if (ui->check_7->isChecked())
-        ui->check_2->setText(QString::number(m_sum[5] / divisor));
+        for (int i = 0; i < NUM_ADC; i++) {
+            if (m_check[i]->isChecked())
+                m_label[i]->setText(QString::number(m_sum[i] / divisor));
+        }
+    }
 
     m_dataMutex.unlock();
 }
 
-/*
-int m_samples[NUM_ADC][NUM_SAMPLES];
-unsigned int m_sampleIndex;
-int m_sums[NUM_ADC];
-*/
 void MainWindow::adcDataEvent(QList<int> values)
 {
     m_dataMutex.lock();
@@ -108,6 +96,12 @@ void MainWindow::adcStopEvent()
     if (m_adcReader) {
         ui->actionStart->setEnabled(true);
         ui->actionStop->setEnabled(false);
+        killTimer(m_timer);
+        m_timer = 0;
+
+        for (int i = 0; i < NUM_ADC; i++) {
+            m_check[i]->setEnabled(true);
+        }
     }
 }
 
@@ -118,23 +112,10 @@ void MainWindow::onStart()
     if (!m_adcReader)
         return;
 
-    if (ui->check_2->isChecked())
-        adcList.append(2);
-
-    if (ui->check_3->isChecked())
-        adcList.append(3);
-
-    if (ui->check_4->isChecked())
-        adcList.append(4);
-
-    if (ui->check_5->isChecked())
-        adcList.append(5);
-
-    if (ui->check_6->isChecked())
-        adcList.append(6);
-
-    if (ui->check_7->isChecked())
-        adcList.append(7);
+    for (int i = 0; i < NUM_ADC; i++) {
+        if (m_check[i]->isChecked())
+            adcList.append(i + 2);
+    }
 
     if (adcList.length() < 1)
         return;
@@ -152,6 +133,11 @@ void MainWindow::onStart()
     if (m_adcReader->startLoop(50, adcList)) {
         ui->actionStart->setEnabled(false);
         ui->actionStop->setEnabled(true);
+
+        for (int i = 0; i < NUM_ADC; i++) {
+            m_check[i]->setEnabled(false);
+        }
+
         m_timer = startTimer(100);
     }
 }
@@ -164,5 +150,36 @@ void MainWindow::onStop()
         ui->actionStop->setEnabled(false);
         killTimer(m_timer);
         m_timer = 0;
+
+        for (int i = 0; i < NUM_ADC; i++) {
+            m_check[i]->setEnabled(true);
+        }
     }
+}
+
+void MainWindow::layoutControls()
+{
+    QHBoxLayout *hLayout;
+
+    QVBoxLayout *vLayout = new QVBoxLayout();
+
+    for (int i = 0; i < NUM_ADC; i++) {
+        m_check[i] = new QCheckBox(QString::number(i + 2), this);
+
+        m_label[i] = new QLabel("0", this);
+        m_label[i]->setFrameShape(QFrame::Panel);
+        m_label[i]->setFrameShadow(QFrame::Sunken);
+        m_label[i]->setMinimumWidth(60);
+        m_label[i]->setMaximumWidth(60);
+        m_label[i]->setMaximumHeight(24);
+
+        hLayout = new QHBoxLayout();
+        hLayout->addWidget(m_check[i]);
+        hLayout->addWidget(m_label[i]);
+        hLayout->addStretch();
+
+        vLayout->addItem(hLayout);
+    }
+
+    centralWidget()->setLayout(vLayout);
 }

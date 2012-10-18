@@ -61,7 +61,7 @@ bool MadcReader::startLoop(int delay, QList<int> adcList)
             return false;
         }
 
-        m_activeList[adc] = true;
+        m_activeList[adc-2] = true;
     }
 
     start();
@@ -81,48 +81,28 @@ void MadcReader::run()
 {
     QList<int> values;
     int val;
-    int waited;
 
     for (int i = 0; i < NUM_ADC; i++)
-        values[i] = 0;
-
-    waited = m_delay;
+        values.append(0);
 
     while (!m_stop) {
-        if (waited >= m_delay) {
-            for (int i = 0; i < NUM_ADC; i++) {
-                if (m_activeList.at(i)) {
-                    val = readADC(i + 2);
+        for (int i = 0; i < NUM_ADC; i++) {
+            if (m_activeList.at(i)) {
+                val = readADC(i + 2);
 
-                    if (val == ADC_READ_ERROR) {
-                        m_stop = true;
-                        break;
-                    }
-                    else {
-                        values[i] = val;
-                    }
+                if (val == ADC_READ_ERROR) {
+                    m_stop = true;
+                    break;
+                }
+                else {
+                    values[i] = val;
                 }
             }
 
             if (!m_stop)
                 emit dataEvent(values);
 
-            waited = 0;
-        }
-        else {
-            if (m_delay > 200) {
-                int this_delay = (m_delay - waited);
-
-                if (this_delay > 200)
-                    this_delay = 200;
-
-                msleep(this_delay);
-                waited += this_delay;
-            }
-            else {
-                msleep(m_delay);
-                waited = m_delay;
-            }
+            msleep(m_delay);
         }
     }
 

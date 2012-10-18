@@ -9,6 +9,8 @@
 #include <QMainWindow>
 #include <qqueue.h>
 #include <qmutex.h>
+#include <qlabel.h>
+#include <qcheckbox.h>
 
 #include "madcReader.h"
 
@@ -37,6 +39,8 @@ protected:
     void timerEvent(QTimerEvent *);
 
 private:
+    void layoutControls();
+
     Ui::MainWindow *ui;
 
     MadcReader *m_adcReader;
@@ -47,6 +51,9 @@ private:
     unsigned int m_sampleIndex;
     int m_samples[NUM_ADC][NUM_SAMPLES];
     int m_sum[NUM_ADC];
+
+    QLabel *m_label[NUM_ADC];
+    QCheckBox *m_check[NUM_ADC];
 };
 
 #endif // MAINWINDOW_H
