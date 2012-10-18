@@ -169,8 +169,8 @@ void MainWindow::layoutControls()
         m_label[i] = new QLabel("0", this);
         m_label[i]->setFrameShape(QFrame::Panel);
         m_label[i]->setFrameShadow(QFrame::Sunken);
-        m_label[i]->setMinimumWidth(60);
-        m_label[i]->setMaximumWidth(60);
+        m_label[i]->setMinimumWidth(100);
+        m_label[i]->setMaximumWidth(100);
         m_label[i]->setMaximumHeight(24);
 
         hLayout = new QHBoxLayout();
