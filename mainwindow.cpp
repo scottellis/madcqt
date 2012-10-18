@@ -121,6 +121,7 @@ void MainWindow::onStart()
         return;
 
     for (int i = 0; i < NUM_ADC; i++) {
+        m_label[i]->setText("0");
         m_sum[i] = 0;
 
         for (int j = 0; j < NUM_SAMPLES; j++)
@@ -130,7 +131,7 @@ void MainWindow::onStart()
     m_sampleIndex = 0;
     m_sampleCount = 0;
 
-    if (m_adcReader->startLoop(20, adcList)) {
+    if (m_adcReader->startLoop(10, adcList)) {
         ui->actionStart->setEnabled(false);
         ui->actionStop->setEnabled(true);
 

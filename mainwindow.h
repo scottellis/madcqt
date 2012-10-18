@@ -14,7 +14,7 @@
 
 #include "madcReader.h"
 
-#define NUM_SAMPLES 16
+#define NUM_SAMPLES 32
 
 namespace Ui {
 class MainWindow;
