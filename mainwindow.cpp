@@ -81,7 +81,7 @@ void MainWindow::adcDataEvent(QList<int> values)
 
     for (int i = 0; i < values.length(); i++) {
         int val = values.at(i);
-        m_sum[i] = val - m_samples[i][m_sampleIndex];
+        m_sum[i] += val - m_samples[i][m_sampleIndex];
         m_samples[i][m_sampleIndex] = val;
     }
 
