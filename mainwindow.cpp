@@ -3,6 +3,7 @@
  *
  */
 
+#include <qdebug.h>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 
@@ -27,7 +28,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     if (m_adcReader) {
         connect(m_adcReader, SIGNAL(dataEvent(QList<int>)), this, SLOT(adcDataEvent(QList<int>)), Qt::DirectConnection);
-        connect(m_adcReader, SIGNAL(stopEvent()), this, SLOT(adcStopEvent()), Qt::DirectConnection);
+        connect(m_adcReader, SIGNAL(stopEvent()), this, SLOT(adcStopEvent()));
+        connect(m_adcReader, SIGNAL(errorEvent(QString)), this, SLOT(adcErrorEvent(QString)));
     }
     else {
         ui->actionStart->setEnabled(false);
@@ -50,6 +52,7 @@ void MainWindow::closeEvent(QCloseEvent *)
     if (m_adcReader) {
         disconnect(m_adcReader, SIGNAL(dataEvent(QList<int>)), this, SLOT(adcDataEvent(QList<int>)));
         disconnect(m_adcReader, SIGNAL(stopEvent()), this, SLOT(adcStopEvent()));
+        connect(m_adcReader, SIGNAL(errorEvent(QString)), this, SLOT(adcErrorEvent(QString)));
         m_adcReader->stopLoop();
         delete m_adcReader;
         m_adcReader = NULL;
@@ -68,7 +71,7 @@ void MainWindow::timerEvent(QTimerEvent *)
 
         for (int i = 0; i < NUM_ADC; i++) {
             if (m_check[i]->isChecked())
-                m_label[i]->setText(QString::number(m_sum[i] / divisor));
+                m_data[i]->setText(QString::number(m_sum[i] / divisor));
         }
     }
 
@@ -105,6 +108,11 @@ void MainWindow::adcStopEvent()
     }
 }
 
+void MainWindow::adcErrorEvent(QString errMsg)
+{
+    qDebug() << errMsg;
+}
+
 void MainWindow::onStart()
 {
     QList<int> adcList;
@@ -121,7 +129,7 @@ void MainWindow::onStart()
         return;
 
     for (int i = 0; i < NUM_ADC; i++) {
-        m_label[i]->setText("0");
+        m_data[i]->setText("0");
         m_sum[i] = 0;
 
         for (int j = 0; j < NUM_SAMPLES; j++)
@@ -148,13 +156,17 @@ void MainWindow::onStop()
     if (m_adcReader) {
         m_adcReader->stopLoop();
         ui->actionStart->setEnabled(true);
-        ui->actionStop->setEnabled(false);
+    }
+
+    ui->actionStop->setEnabled(false);
+
+    if (m_timer) {
         killTimer(m_timer);
         m_timer = 0;
+    }
 
-        for (int i = 0; i < NUM_ADC; i++) {
-            m_check[i]->setEnabled(true);
-        }
+    for (int i = 0; i < NUM_ADC; i++) {
+        m_check[i]->setEnabled(true);
     }
 }
 
@@ -167,16 +179,16 @@ void MainWindow::layoutControls()
     for (int i = 0; i < NUM_ADC; i++) {
         m_check[i] = new QCheckBox(QString::number(i + 2), this);
 
-        m_label[i] = new QLabel("0", this);
-        m_label[i]->setFrameShape(QFrame::Panel);
-        m_label[i]->setFrameShadow(QFrame::Sunken);
-        m_label[i]->setMinimumWidth(100);
-        m_label[i]->setMaximumWidth(100);
-        m_label[i]->setMaximumHeight(24);
+        m_data[i] = new QLabel("0", this);
+        m_data[i]->setFrameShape(QFrame::Panel);
+        m_data[i]->setFrameShadow(QFrame::Sunken);
+        m_data[i]->setMinimumWidth(100);
+        m_data[i]->setMaximumWidth(100);
+        m_data[i]->setMaximumHeight(24);
 
         hLayout = new QHBoxLayout();
         hLayout->addWidget(m_check[i]);
-        hLayout->addWidget(m_label[i]);
+        hLayout->addWidget(m_data[i]);
         hLayout->addStretch();
 
         vLayout->addItem(hLayout);

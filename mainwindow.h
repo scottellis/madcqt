@@ -29,10 +29,11 @@ public:
     ~MainWindow();
 
 public slots:
-    void adcDataEvent(QList<int> values);
-    void adcStopEvent();
     void onStart();
     void onStop();
+    void adcDataEvent(QList<int> values);
+    void adcStopEvent();
+    void adcErrorEvent(QString);
 
 protected:
     void closeEvent(QCloseEvent *);
@@ -52,7 +53,7 @@ private:
     int m_samples[NUM_ADC][NUM_SAMPLES];
     int m_sum[NUM_ADC];
 
-    QLabel *m_label[NUM_ADC];
+    QLabel *m_data[NUM_ADC];
     QCheckBox *m_check[NUM_ADC];
 };
 

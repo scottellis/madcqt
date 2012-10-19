@@ -26,6 +26,7 @@ public:
 signals:
     void dataEvent(QList<int>);
     void stopEvent();
+    void errorEvent(QString);
 
 protected:
     void run();

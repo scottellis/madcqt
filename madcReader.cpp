@@ -15,8 +15,6 @@
 #include <getopt.h>
 #include <errno.h>
 
-#include <qdebug.h>
-
 #include "madcReader.h"
 
 
@@ -49,7 +47,7 @@ bool MadcReader::startLoop(int delay, QList<int> adcList)
         m_activeList[i] = false;
 
     if (adcList.length() < 1) {
-        qDebug() << "MadcReader::startLoop: adcList is empty";
+        emit errorEvent("MadcReader::startLoop: adcList is empty");
         return false;
     }
 
@@ -57,7 +55,8 @@ bool MadcReader::startLoop(int delay, QList<int> adcList)
         int adc = adcList.at(i);
 
         if (adc < MIN_ADC || adc > MAX_ADC) {
-            qDebug() << "MadcReader::startLoop: Bad ADC number: " << adc;
+            emit errorEvent(QString("MadcReader::startLoop: Bad ADC number: %1")
+                            .arg(adc));
             return false;
         }
 
@@ -121,7 +120,9 @@ int MadcReader::readADC(int adc)
     memset(buff, 0, sizeof(buff));
 
     if (read(fd, buff, 6) < 0) {
-        qDebug() << "MadcReader::readADC: read error: " << strerror(errno);
+        emit errorEvent(QString("MadcReader::readADC: read error: %1")
+                        .arg(strerror(errno)));
+
         val = ADC_READ_ERROR;
     }
     else {
@@ -139,10 +140,12 @@ int MadcReader::openADC(int adc)
 
     sprintf(path, "/sys/class/hwmon/hwmon0/device/in%d_input", adc);
 
-     int fd = open(path, O_RDONLY);
+    int fd = open(path, O_RDONLY);
 
-     if (fd < 0)
-         qDebug() << "MadcReader::openADC: open(" << path << "): " << strerror(errno);
+    if (fd < 0) {
+        emit errorEvent(QString("MadcReader::openADC: open(%1): %2")
+                         .arg(path).arg(strerror(errno)));
+    }
 
-     return fd;
+    return fd;
 }
