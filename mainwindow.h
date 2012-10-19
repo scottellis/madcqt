@@ -44,7 +44,7 @@ private:
 
     Ui::MainWindow *ui;
 
-    MadcReader *m_adcReader;
+    MadcReader *m_madcReader;
     int m_timer;
 
     QMutex m_dataMutex;

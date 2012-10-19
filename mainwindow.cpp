@@ -24,12 +24,12 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionStart, SIGNAL(triggered()), this, SLOT(onStart()));
     connect(ui->actionStop, SIGNAL(triggered()), this, SLOT(onStop()));
 
-    m_adcReader = new MadcReader();
+    m_madcReader = new MadcReader();
 
-    if (m_adcReader) {
-        connect(m_adcReader, SIGNAL(dataEvent(QList<int>)), this, SLOT(adcDataEvent(QList<int>)), Qt::DirectConnection);
-        connect(m_adcReader, SIGNAL(stopEvent()), this, SLOT(adcStopEvent()));
-        connect(m_adcReader, SIGNAL(errorEvent(QString)), this, SLOT(adcErrorEvent(QString)));
+    if (m_madcReader) {
+        connect(m_madcReader, SIGNAL(dataEvent(QList<int>)), this, SLOT(adcDataEvent(QList<int>)), Qt::DirectConnection);
+        connect(m_madcReader, SIGNAL(stopEvent()), this, SLOT(adcStopEvent()));
+        connect(m_madcReader, SIGNAL(errorEvent(QString)), this, SLOT(adcErrorEvent(QString)));
     }
     else {
         ui->actionStart->setEnabled(false);
@@ -49,13 +49,13 @@ MainWindow::~MainWindow()
 
 void MainWindow::closeEvent(QCloseEvent *)
 {
-    if (m_adcReader) {
-        disconnect(m_adcReader, SIGNAL(dataEvent(QList<int>)), this, SLOT(adcDataEvent(QList<int>)));
-        disconnect(m_adcReader, SIGNAL(stopEvent()), this, SLOT(adcStopEvent()));
-        connect(m_adcReader, SIGNAL(errorEvent(QString)), this, SLOT(adcErrorEvent(QString)));
-        m_adcReader->stopLoop();
-        delete m_adcReader;
-        m_adcReader = NULL;
+    if (m_madcReader) {
+        disconnect(m_madcReader, SIGNAL(dataEvent(QList<int>)), this, SLOT(adcDataEvent(QList<int>)));
+        disconnect(m_madcReader, SIGNAL(stopEvent()), this, SLOT(adcStopEvent()));
+        connect(m_madcReader, SIGNAL(errorEvent(QString)), this, SLOT(adcErrorEvent(QString)));
+        m_madcReader->stopLoop();
+        delete m_madcReader;
+        m_madcReader = NULL;
     }
 }
 
@@ -96,7 +96,7 @@ void MainWindow::adcDataEvent(QList<int> values)
 
 void MainWindow::adcStopEvent()
 {
-    if (m_adcReader) {
+    if (m_madcReader) {
         ui->actionStart->setEnabled(true);
         ui->actionStop->setEnabled(false);
         killTimer(m_timer);
@@ -117,7 +117,7 @@ void MainWindow::onStart()
 {
     QList<int> adcList;
 
-    if (!m_adcReader)
+    if (!m_madcReader)
         return;
 
     for (int i = 0; i < NUM_ADC; i++) {
@@ -139,7 +139,7 @@ void MainWindow::onStart()
     m_sampleIndex = 0;
     m_sampleCount = 0;
 
-    if (m_adcReader->startLoop(10, adcList)) {
+    if (m_madcReader->startLoop(10, adcList)) {
         ui->actionStart->setEnabled(false);
         ui->actionStop->setEnabled(true);
 
@@ -153,8 +153,8 @@ void MainWindow::onStart()
 
 void MainWindow::onStop()
 {
-    if (m_adcReader) {
-        m_adcReader->stopLoop();
+    if (m_madcReader) {
+        m_madcReader->stopLoop();
         ui->actionStart->setEnabled(true);
     }
 
